@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          Role      @default(USER)
+  journals      Journal[]
+  settings      Settings?
+}
+
+model Settings {
+  id            String    @id @default(cuid())
+  theme         String    @default("light")
+  notifyEmail   Boolean   @default(false)
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Journal {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  date          DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?  @relation(fields: [categoryId], references: [id])
+  tags          TagsOnJournals[]
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  color         String    @default("#3b82f6")
+  journals      Journal[]
+}
+
+model Tag {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  journals      TagsOnJournals[]
+}
+
+model TagsOnJournals {
+  journalId     String
+  journal       Journal   @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  tagId         String
+  tag           Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  assignedAt    DateTime  @default(now())
+
+  @@id([journalId, tagId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
