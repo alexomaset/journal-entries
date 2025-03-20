@@ -14,12 +14,89 @@ const journalSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
+// Define types for better type safety
+type JournalTag = {
+  tag: {
+    id: string;
+    name: string;
+  };
+};
+
+type JournalWithRelations = {
+  id: string;
+  title: string;
+  content: string;
+  date: Date;
+  categoryId: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  userId: string;
+  category: {
+    id: string;
+    name: string;
+    color: string;
+  } | null;
+  tags: JournalTag[];
+};
+
+type FormattedJournal = {
+  id: string;
+  title: string;
+  content: string;
+  date: Date;
+  categoryId: string | null;
+  category: {
+    id: string;
+    name: string;
+    color: string;
+  } | null;
+  tags: {
+    id: string;
+    name: string;
+  }[];
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
+/**
+ * Format a journal entry for API response
+ * @param journal The journal entry from database
+ * @param includeTimestamps Whether to include createdAt and updatedAt fields
+ * @returns Formatted journal object
+ */
+const formatJournal = (journal: JournalWithRelations, includeTimestamps = false): FormattedJournal => {
+  const formatted: FormattedJournal = {
+    id: journal.id,
+    title: journal.title,
+    content: journal.content,
+    date: journal.date,
+    categoryId: journal.categoryId,
+    category: journal.category ? {
+      id: journal.category.id,
+      name: journal.category.name,
+      color: journal.category.color
+    } : null,
+    tags: journal.tags.map(tag => ({
+      id: tag.tag.id,
+      name: tag.tag.name
+    }))
+  };
+  
+  // Add timestamps if requested
+  if (includeTimestamps && journal.createdAt && journal.updatedAt) {
+    formatted.createdAt = journal.createdAt;
+    formatted.updatedAt = journal.updatedAt;
+  }
+  
+  return formatted;
+};
+
 // GET - Fetch all journals for the authenticated user
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user) {
+    if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
@@ -132,30 +209,17 @@ export async function GET(request: NextRequest) {
         }
       });
       
-      // Format the journals for analysis
-      const formattedJournals = allJournals.map(journal => ({
-        id: journal.id,
-        title: journal.title,
-        content: journal.content,
-        date: journal.date,
-        categoryId: journal.categoryId,
-        category: journal.category ? {
-          id: journal.category.id,
-          name: journal.category.name,
-          color: journal.category.color
-        } : null,
-        tags: journal.tags.map(tag => ({
-          id: tag.tag.id,
-          name: tag.tag.name
-        }))
-      }));
+      // Format the journals for analysis with proper type assertion
+      const formattedJournals = allJournals.map(journal => formatJournal(journal as JournalWithRelations));
       
       // Calculate total count
       const totalCount = formattedJournals.length;
       
       // Calculate category distribution
-      const categoryMap = new Map();
-      formattedJournals.forEach(journal => {
+      const categoryMap = new Map<string, { name: string; color: string; count: number }>();
+      
+      // Type assertion for formattedJournals to match the expected shape
+      (formattedJournals as FormattedJournal[]).forEach(journal => {
         const categoryName = journal.category?.name || "Uncategorized";
         const categoryColor = journal.category?.color || "#6b7280";
         const categoryId = journal.category?.id || "none";
@@ -168,14 +232,14 @@ export async function GET(request: NextRequest) {
           });
         }
         
-        categoryMap.get(categoryId).count += 1;
+        categoryMap.get(categoryId)!.count += 1;
       });
       
       const categoryCounts = Array.from(categoryMap.values());
       
       // Calculate monthly distribution
       const monthlyMap = new Map();
-      formattedJournals.forEach(journal => {
+      formattedJournals.forEach((journal: { date: string | number | Date; }) => {
         const date = new Date(journal.date);
         const monthYear = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
         
@@ -203,7 +267,7 @@ export async function GET(request: NextRequest) {
         });
       
       // Calculate word count data
-      const wordCountData = formattedJournals.map(journal => ({
+      const wordCountData = formattedJournals.map((journal: { date: string | number | Date; content: string; }) => ({
         date: new Date(journal.date).toLocaleDateString(),
         wordCount: countWords(journal.content),
       }));
@@ -246,23 +310,8 @@ export async function GET(request: NextRequest) {
     const journals = await prisma.journal.findMany(query);
     
     // Format the journals for the response
-    const formattedJournals = journals.map(journal => ({
-      id: journal.id,
-      title: journal.title,
-      content: journal.content,
-      date: journal.date,
-      createdAt: journal.createdAt,
-      updatedAt: journal.updatedAt,
-      category: journal.category ? {
-        id: journal.category.id,
-        name: journal.category.name,
-        color: journal.category.color
-      } : null,
-      tags: journal.tags.map(tag => ({
-        id: tag.tag.id,
-        name: tag.tag.name
-      }))
-    }));
+    // Use type assertion to ensure TypeScript recognizes that the include options in the query provide the necessary fields
+    const formattedJournals = journals.map((journal) => formatJournal(journal as JournalWithRelations, true));
     
     return NextResponse.json(formattedJournals);
   } catch (error) {
@@ -279,7 +328,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || !session.user) {
+    if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
@@ -298,7 +347,7 @@ export async function POST(request: NextRequest) {
     const { title, content, categoryId, date, tags } = validation.data;
     
     // Process tags if provided
-    let tagData = [];
+    let tagData: { tagId: any; }[] = [];
     if (tags && tags.length > 0) {
       // For each tag name, either find existing or create new
       tagData = await Promise.all(
@@ -325,8 +374,8 @@ export async function POST(request: NextRequest) {
         title,
         content,
         date: date ? new Date(date) : new Date(),
-        userId,
-        categoryId: categoryId || undefined,
+        userId: userId as string, // Ensure userId is treated as string since we've already checked session.user exists
+        categoryId: categoryId || null,
         tags: {
           create: tagData
         }
@@ -342,23 +391,7 @@ export async function POST(request: NextRequest) {
     });
     
     // Format the response
-    const formattedJournal = {
-      id: journal.id,
-      title: journal.title,
-      content: journal.content,
-      date: journal.date,
-      createdAt: journal.createdAt,
-      updatedAt: journal.updatedAt,
-      category: journal.category ? {
-        id: journal.category.id,
-        name: journal.category.name,
-        color: journal.category.color
-      } : null,
-      tags: journal.tags.map(tag => ({
-        id: tag.tag.id,
-        name: tag.tag.name
-      }))
-    };
+    const formattedJournal = formatJournal(journal, true);
     
     return NextResponse.json(formattedJournal, { status: 201 });
   } catch (error) {
