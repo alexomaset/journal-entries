@@ -1,102 +1,105 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { useAuth } from "@/lib/auth";
+import { FiBook, FiEdit, FiArrowRight } from "react-icons/fi";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { user, status } = useAuth();
+  const isAuthenticated = status === "authenticated";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-white shadow-sm">
+        <div className="text-xl font-semibold text-blue-600">Journal Entries</div>
+        <nav>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <span className="inline-block mr-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                Dashboard
+              </span>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login">
+                <span className="inline-block mr-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors">
+                  Sign In
+                </span>
+              </Link>
+              <Link href="/register">
+                <span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                  Sign Up
+                </span>
+              </Link>
+            </>
+          )}
+        </nav>
+      </header>
+
+      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-5xl mx-auto">
+        <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+          Your Digital Journal Experience
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl">
+          Capture your thoughts, track your growth, and reflect on your journey
+          with our powerful and intuitive journaling platform.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl mb-12">
+          <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex justify-center mb-4">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FiBook size={24} className="text-blue-600" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Create Entries</h2>
+            <p className="text-gray-600">
+              Write down your thoughts, ideas, and experiences in a secure and organized way.
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex justify-center mb-4">
+              <div className="bg-green-100 p-3 rounded-full">
+                <FiEdit size={24} className="text-green-600" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Organize & Tag</h2>
+            <p className="text-gray-600">
+              Categorize your entries with custom tags and categories for easy retrieval and organization.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="flex justify-center mb-4">
+              <div className="bg-purple-100 p-3 rounded-full">
+                <FiArrowRight size={24} className="text-purple-600" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Track Progress</h2>
+            <p className="text-gray-600">
+              Visualize your journaling habits and discover insights about your writing patterns.
+            </p>
+          </div>
         </div>
+
+        {isAuthenticated ? (
+          <Link href="/dashboard" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center shadow-md hover:shadow-lg transition-shadow">
+            Go to Dashboard
+            <FiArrowRight className="ml-2" />
+          </Link>
+        ) : (
+          <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center shadow-md hover:shadow-lg transition-shadow">
+            Get Started
+            <FiArrowRight className="ml-2" />
+          </Link>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      <footer className="w-full py-6 mt-auto bg-white border-t">
+        <div className="max-w-5xl mx-auto px-6 text-center text-gray-500">
+          <p>&copy; {new Date().getFullYear()} Journal Entries App. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
