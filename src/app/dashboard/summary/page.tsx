@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { FiCalendar, FiClock } from "react-icons/fi";
+import ScrollableContainer from "../layout-components/ScrollableContainer";
 
 // Register ChartJS components
 ChartJS.register(
@@ -213,7 +214,7 @@ export default function SummaryPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <ScrollableContainer>
       <h1 className="text-2xl font-bold text-gray-900">Journal Summary</h1>
       
       {/* Date range selector */}
@@ -422,6 +423,6 @@ export default function SummaryPage() {
           </div>
         </>
       )}
-    </div>
+    </ScrollableContainer>
   );
 }
