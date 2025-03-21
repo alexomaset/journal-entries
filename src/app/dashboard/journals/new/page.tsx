@@ -144,7 +144,7 @@ export default function NewJournalPage() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [watch, setValue]); // Only depend on stable functions, not state that changes
+  }, [watch, setValue, selectedTags]); // Only depend on stable functions, not state that changes
 
   // Set up auto-analysis when content changes, using a more stable approach
   useEffect(() => {

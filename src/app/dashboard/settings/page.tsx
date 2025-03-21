@@ -223,7 +223,7 @@ export default function SettingsPage() {
               ...userData.settings,
               theme: data.theme,
               notifyEmail: data.notifyEmail,
-            } as any
+            } as User["settings"]
           });
         }
       } else {
