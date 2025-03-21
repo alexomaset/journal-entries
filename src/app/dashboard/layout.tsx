@@ -12,7 +12,9 @@ import {
   FiTag, 
   FiPieChart, 
   FiSettings, 
-  FiLogOut 
+  FiLogOut,
+  FiUsers,
+  FiShield
 } from "react-icons/fi";
 
 export default function DashboardLayout({
@@ -31,6 +33,11 @@ export default function DashboardLayout({
     { href: "/dashboard/categories", label: "Categories", icon: <FiTag size={18} /> },
     { href: "/dashboard/summary", label: "Summary", icon: <FiPieChart size={18} /> },
     { href: "/dashboard/settings", label: "Settings", icon: <FiSettings size={18} /> },
+  ];
+
+  // Admin navigation items (only shown to admin users)
+  const adminNavItems = [
+    { href: "/dashboard/admin/users", label: "Users", icon: <FiUsers size={18} /> },
   ];
 
   // Check if the current path matches the nav item
@@ -65,6 +72,37 @@ export default function DashboardLayout({
             ))}
           </ul>
           
+          {/* Admin Section (only shown to admin users) */}
+          {user?.role === "ADMIN" && (
+            <>
+              <div className="mt-6 border-t pt-4">
+                <div className="mb-2 px-4 text-xs font-semibold uppercase text-gray-500">
+                  <span className="flex items-center">
+                    <FiShield className="mr-1" size={12} />
+                    Admin
+                  </span>
+                </div>
+                <ul className="space-y-2">
+                  {adminNavItems.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={`flex items-center rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                          isActive(item.href)
+                            ? "bg-blue-50 text-blue-700"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span className="mr-3">{item.icon}</span>
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+          
           <div className="mt-6 border-t pt-4">
             <Button
               variant="ghost"
@@ -89,8 +127,14 @@ export default function DashboardLayout({
             {pathname === "/dashboard/categories" && "Categories"}
             {pathname === "/dashboard/summary" && "Summary"}
             {pathname === "/dashboard/settings" && "Settings"}
+            {pathname === "/dashboard/admin/users" && "User Management"}
           </h2>
           <div className="flex items-center">
+            {user?.role === "ADMIN" && (
+              <span className="mr-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                Admin
+              </span>
+            )}
             <span className="mr-4 text-sm text-gray-600">
               {user?.name || user?.email}
             </span>
