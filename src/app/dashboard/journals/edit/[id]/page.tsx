@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,36 +28,16 @@ type Category = {
   color: string;
 };
 
-type Journal = {
-  id: string;
-  title: string;
-  content: string;
-  date: string;
-  categoryId: string | null;
-  category: {
-    id: string;
-    name: string;
-    color: string;
-  } | null;
-  tags: {
-    id: string;
-    name: string;
-  }[];
-};
-
-export default function EditJournalPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function EditJournalPage() {
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = params?.id as string;
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [tagInput, setTagInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [journal, setJournal] = useState<Journal | null>(null);
   
   // Set up form with validation
   const {
@@ -91,7 +71,6 @@ export default function EditJournalPage({
         }
         
         const journalData = await journalRes.json();
-        setJournal(journalData);
         
         // Extract tag names
         const tagNames = journalData.tags.map((tag: { name: string }) => tag.name);
@@ -219,6 +198,9 @@ export default function EditJournalPage({
               className="mt-1"
               placeholder="Enter journal title..."
             />
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+            )}
           </div>
           
           {/* Date */}
@@ -230,7 +212,6 @@ export default function EditJournalPage({
               id="date"
               type="date"
               {...register("date")}
-              error={errors.date?.message}
               className="mt-1"
             />
           </div>
@@ -240,23 +221,21 @@ export default function EditJournalPage({
             <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
               Category
             </label>
-            <div className="mt-1">
-              <select
-                id="categoryId"
-                {...register("categoryId")}
-                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              {errors.categoryId && (
-                <p className="mt-1 text-sm text-red-600">{errors.categoryId.message}</p>
-              )}
-            </div>
+            <select
+              id="categoryId"
+              {...register("categoryId")}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {errors.categoryId && (
+              <p className="mt-1 text-sm text-red-600">{errors.categoryId.message}</p>
+            )}
           </div>
           
           {/* Tags */}

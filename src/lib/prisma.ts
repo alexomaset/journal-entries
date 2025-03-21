@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 
+// Properly extend the NodeJS.Global interface
 declare global {
+  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 

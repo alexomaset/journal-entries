@@ -13,11 +13,10 @@ import {
   PointElement,
   LineElement
 } from "chart.js";
-import { Bar, Pie, Line } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import { FiCalendar, FiClock } from "react-icons/fi";
+import { FiCalendar } from "react-icons/fi";
 import ScrollableContainer from "../layout-components/ScrollableContainer";
 
 // Register ChartJS components
@@ -306,18 +305,15 @@ export default function SummaryPage() {
                     // Calculate the color intensity based on count
                     const maxCount = Math.max(...calendarHeatMap.map(d => d.count), 1);
                     const intensity = day.count > 0 ? (day.count / maxCount) * 0.8 + 0.2 : 0;
-                    const bgColor = day.count > 0 
+                    const cellBgColor = day.count > 0 
                       ? `rgba(59, 130, 246, ${intensity})` 
                       : 'rgba(229, 231, 235, 0.5)';
-                    
-                    const date = new Date(day.date);
-                    const dayOfWeek = date.toLocaleString('default', { weekday: 'short' });
                     
                     return (
                       <div
                         key={day.date}
                         className="w-4 h-4 rounded-sm cursor-pointer transition-colors"
-                        style={{ backgroundColor: bgColor }}
+                        style={{ backgroundColor: cellBgColor }}
                         title={`${day.date}: ${day.count} entries`}
                       />
                     );

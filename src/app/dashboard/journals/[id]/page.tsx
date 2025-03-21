@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { FiEdit2, FiTrash2, FiCalendar, FiTag, FiClock } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { formatDate, timeAgo } from "@/lib/utils";
@@ -26,13 +26,11 @@ type Journal = {
   }[];
 };
 
-export default function JournalDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function JournalDetailPage() {
   const router = useRouter();
-  const { id } = params;
+  const params = useParams();
+  const id = params?.id as string;
+  
   const [journal, setJournal] = useState<Journal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);

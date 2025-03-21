@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { z } from "zod";
 import { countWords } from "@/lib/utils";
+import { Prisma } from '@prisma/client';
 
 // Schema for creating/updating journals
 const journalSchema = z.object({
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
     
     // If only count is requested
     if (countRequested) {
-      const whereClause: any = { userId };
+      const whereClause: Prisma.JournalWhereInput = { userId };
       
       if (categoryId) {
         whereClause.categoryId = categoryId;
@@ -122,14 +123,14 @@ export async function GET(request: NextRequest) {
       
       if (startDate) {
         whereClause.date = {
-          ...(whereClause.date || {}),
+          ...(whereClause.date as object || {}),
           gte: new Date(startDate),
         };
       }
       
       if (endDate) {
         whereClause.date = {
-          ...(whereClause.date || {}),
+          ...(whereClause.date as object || {}),
           lte: new Date(endDate),
         };
       }
@@ -160,7 +161,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Build filter conditions
-    const where: any = { userId };
+    const where: Prisma.JournalWhereInput = { userId };
     
     if (categoryId) {
       where.categoryId = categoryId;
@@ -284,7 +285,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Regular journal fetching with filters
-    const query: any = {
+    const query: Prisma.JournalFindManyArgs = {
       where: {
         ...where,
         ...tagFilter
@@ -347,7 +348,7 @@ export async function POST(request: NextRequest) {
     const { title, content, categoryId, date, tags } = validation.data;
     
     // Process tags if provided
-    let tagData: { tagId: any; }[] = [];
+    let tagData: { tagId: string; }[] = [];
     if (tags && tags.length > 0) {
       // For each tag name, either find existing or create new
       tagData = await Promise.all(

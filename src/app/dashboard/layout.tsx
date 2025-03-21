@@ -21,7 +21,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Navigation items
   const navItems = [

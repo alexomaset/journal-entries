@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/lib/auth";
 import { FiUser, FiSettings, FiMoon, FiSun, FiMail, FiLock, FiSave, FiRefreshCw } from "react-icons/fi";
 import ScrollableContainer from "../layout-components/ScrollableContainer";
+import { useTheme } from "@/providers/ThemeProvider";
 
 // Profile form schema
 const profileSchema = z.object({
@@ -62,6 +63,7 @@ type User = {
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "preferences">("profile");
   const [userData, setUserData] = useState<User | null>(null);
@@ -88,7 +90,7 @@ export default function SettingsPage() {
     register: registerSettings,
     handleSubmit: handleSubmitSettings,
     reset: resetSettings,
-    formState: { errors: settingsErrors },
+    watch: watchSettings,
   } = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -96,6 +98,9 @@ export default function SettingsPage() {
       notifyEmail: false,
     },
   });
+  
+  // Watch the theme value for immediate preview
+  const currentTheme = watchSettings("theme");
 
   // Fetch user data
   useEffect(() => {
@@ -206,6 +211,21 @@ export default function SettingsPage() {
       
       if (response.ok) {
         toast.success("Preferences updated successfully");
+        
+        // Apply theme change immediately without requiring page refresh
+        setTheme(data.theme as "light" | "dark" | "system");
+        
+        // Update local state to reflect new settings
+        if (userData) {
+          setUserData({
+            ...userData,
+            settings: {
+              ...userData.settings,
+              theme: data.theme,
+              notifyEmail: data.notifyEmail,
+            } as any
+          });
+        }
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to update preferences");
@@ -216,6 +236,12 @@ export default function SettingsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Instantly preview theme change when selecting an option
+  const handleThemePreview = (theme: "light" | "dark" | "system") => {
+    // Apply theme change for preview
+    setTheme(theme);
   };
 
   return (
@@ -367,7 +393,10 @@ export default function SettingsPage() {
                     Theme
                   </label>
                   <div className="grid grid-cols-3 gap-4">
-                    <label className="flex flex-col items-center justify-center rounded-lg border p-4 cursor-pointer transition-colors hover:bg-gray-50">
+                    <label 
+                      className="flex flex-col items-center justify-center rounded-lg border p-4 cursor-pointer transition-colors hover:bg-gray-50"
+                      onClick={() => handleThemePreview("light")}
+                    >
                       <input
                         type="radio"
                         value="light"
@@ -377,16 +406,19 @@ export default function SettingsPage() {
                       <FiSun
                         size={24}
                         className={`mb-2 ${
-                          userData?.settings?.theme === "light" ? "text-blue-500" : "text-gray-400"
+                          currentTheme === "light" ? "text-blue-500" : "text-gray-400"
                         }`}
                       />
                       <span className={`text-sm ${
-                        userData?.settings?.theme === "light" ? "font-medium text-blue-500" : "text-gray-700"
+                        currentTheme === "light" ? "font-medium text-blue-500" : "text-gray-700"
                       }`}>
                         Light
                       </span>
                     </label>
-                    <label className="flex flex-col items-center justify-center rounded-lg border p-4 cursor-pointer transition-colors hover:bg-gray-50">
+                    <label 
+                      className="flex flex-col items-center justify-center rounded-lg border p-4 cursor-pointer transition-colors hover:bg-gray-50"
+                      onClick={() => handleThemePreview("dark")}
+                    >
                       <input
                         type="radio"
                         value="dark"
@@ -396,16 +428,19 @@ export default function SettingsPage() {
                       <FiMoon
                         size={24}
                         className={`mb-2 ${
-                          userData?.settings?.theme === "dark" ? "text-blue-500" : "text-gray-400"
+                          currentTheme === "dark" ? "text-blue-500" : "text-gray-400"
                         }`}
                       />
                       <span className={`text-sm ${
-                        userData?.settings?.theme === "dark" ? "font-medium text-blue-500" : "text-gray-700"
+                        currentTheme === "dark" ? "font-medium text-blue-500" : "text-gray-700"
                       }`}>
                         Dark
                       </span>
                     </label>
-                    <label className="flex flex-col items-center justify-center rounded-lg border p-4 cursor-pointer transition-colors hover:bg-gray-50">
+                    <label 
+                      className="flex flex-col items-center justify-center rounded-lg border p-4 cursor-pointer transition-colors hover:bg-gray-50"
+                      onClick={() => handleThemePreview("system")}
+                    >
                       <input
                         type="radio"
                         value="system"
@@ -415,11 +450,11 @@ export default function SettingsPage() {
                       <FiRefreshCw
                         size={24}
                         className={`mb-2 ${
-                          userData?.settings?.theme === "system" ? "text-blue-500" : "text-gray-400"
+                          currentTheme === "system" ? "text-blue-500" : "text-gray-400"
                         }`}
                       />
                       <span className={`text-sm ${
-                        userData?.settings?.theme === "system" ? "font-medium text-blue-500" : "text-gray-700"
+                        currentTheme === "system" ? "font-medium text-blue-500" : "text-gray-700"
                       }`}>
                         System
                       </span>

@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { FiBook, FiEdit, FiArrowRight } from "react-icons/fi";
 
 export default function Home() {
-  const { user, status } = useAuth();
+  const { status } = useAuth();
   const isAuthenticated = status === "authenticated";
 
   return (

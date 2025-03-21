@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { z } from "zod";
+import { Prisma } from '@prisma/client';
 
 // Query schema
 const summaryQuerySchema = z.object({
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Build date filters
-    const dateFilter: any = {};
+    const dateFilter: Prisma.DateTimeFilter = {};
     if (startDateParam) {
       dateFilter.gte = new Date(startDateParam);
     }

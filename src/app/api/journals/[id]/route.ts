@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { z } from "zod";
 
 // Schema for updating journals
@@ -14,10 +14,7 @@ const journalUpdateSchema = z.object({
 });
 
 // GET - Fetch a specific journal entry
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -26,7 +23,14 @@ export async function GET(
     }
     
     const userId = session.user.id;
-    const { id } = params;
+    
+    // Extract ID from URL path
+    const pathname = request.nextUrl.pathname;
+    const id = pathname.split('/').pop();
+    
+    if (!id) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
     
     const journal = await prisma.journal.findUnique({
       where: { id },
@@ -62,7 +66,7 @@ export async function GET(
         name: journal.category.name,
         color: journal.category.color
       } : null,
-      tags: journal.tags.map(tag => ({
+      tags: journal.tags.map((tag: { tag: { id: string; name: string; }; }) => ({
         id: tag.tag.id,
         name: tag.tag.name
       }))
@@ -79,10 +83,7 @@ export async function GET(
 }
 
 // PATCH - Update a journal entry
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -91,7 +92,15 @@ export async function PATCH(
     }
     
     const userId = session.user.id;
-    const { id } = params;
+    
+    // Extract ID from URL path
+    const pathname = request.nextUrl.pathname;
+    const id = pathname.split('/').pop();
+    
+    if (!id) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+    
     const body = await request.json();
     
     // Validate input
@@ -121,7 +130,7 @@ export async function PATCH(
     // Begin transaction to handle both journal update and tag updates
     const updatedJournal = await prisma.$transaction(async (prisma) => {
       // Update the journal
-      const journal = await prisma.journal.update({
+      const updatedJournalData = await prisma.journal.update({
         where: { id },
         data: {
           title: title !== undefined ? title : undefined,
@@ -131,6 +140,11 @@ export async function PATCH(
         },
         include: {
           category: true,
+          tags: {
+            include: {
+              tag: true
+            }
+          }
         }
       });
       
@@ -164,18 +178,8 @@ export async function PATCH(
         }
       }
       
-      // Fetch the updated journal with all relationships
-      return prisma.journal.findUnique({
-        where: { id },
-        include: {
-          category: true,
-          tags: {
-            include: {
-              tag: true
-            }
-          }
-        }
-      });
+      // Return the updated journal
+      return updatedJournalData;
     });
     
     if (!updatedJournal) {
@@ -195,7 +199,7 @@ export async function PATCH(
         name: updatedJournal.category.name,
         color: updatedJournal.category.color
       } : null,
-      tags: updatedJournal.tags.map(tag => ({
+      tags: updatedJournal.tags.map((tag: { tag: { id: string; name: string; }; }) => ({
         id: tag.tag.id,
         name: tag.tag.name
       }))
@@ -205,17 +209,14 @@ export async function PATCH(
   } catch (error) {
     console.error("Error updating journal:", error);
     return NextResponse.json(
-      { error: "Failed to update journal entry" },
+      { error: "Failed to update journal" },
       { status: 500 }
     );
   }
 }
 
 // DELETE - Delete a journal entry
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -224,7 +225,14 @@ export async function DELETE(
     }
     
     const userId = session.user.id;
-    const { id } = params;
+    
+    // Extract ID from URL path
+    const pathname = request.nextUrl.pathname;
+    const id = pathname.split('/').pop();
+    
+    if (!id) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
     
     // Check if journal exists and belongs to the user
     const journal = await prisma.journal.findUnique({
@@ -239,7 +247,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
     
-    // Delete the journal (cascading will handle related tag relationships)
+    // Delete the journal
     await prisma.journal.delete({
       where: { id },
     });
@@ -248,7 +256,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting journal:", error);
     return NextResponse.json(
-      { error: "Failed to delete journal entry" },
+      { error: "Failed to delete journal" },
       { status: 500 }
     );
   }

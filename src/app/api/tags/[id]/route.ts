@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { z } from "zod";
 
 // Schema for tag update
@@ -10,10 +10,7 @@ const tagUpdateSchema = z.object({
 });
 
 // GET - Fetch a specific tag
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -21,7 +18,13 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const { id } = params;
+    // Extract ID from URL path
+    const pathname = request.nextUrl.pathname;
+    const id = pathname.split('/').pop();
+    
+    if (!id) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
     
     const tag = await prisma.tag.findUnique({
       where: { id },
@@ -53,10 +56,7 @@ export async function GET(
 }
 
 // PATCH - Update a tag
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -64,7 +64,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const { id } = params;
+    // Extract ID from URL path
+    const pathname = request.nextUrl.pathname;
+    const id = pathname.split('/').pop();
+    
+    if (!id) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+    
     const body = await request.json();
     
     // Validate input
@@ -120,10 +127,7 @@ export async function PATCH(
 }
 
 // DELETE - Delete a tag
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -131,7 +135,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const { id } = params;
+    // Extract ID from URL path
+    const pathname = request.nextUrl.pathname;
+    const id = pathname.split('/').pop();
+    
+    if (!id) {
+      return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
     
     // Check if tag exists
     const tag = await prisma.tag.findUnique({
