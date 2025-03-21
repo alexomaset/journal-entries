@@ -2,7 +2,7 @@
 
 A modern web application for personal journaling with AI-powered insights, built with Next.js 15.2.3 and TypeScript.
 
-![Journal Entries App](https://example.com/screenshot.png)
+![Journal Entries App](/screenshots/journal.png)(/screenshots/dashboard_dark.png)
 
 ## Features
 
@@ -61,13 +61,13 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 ## Screenshots
 
 ### Dashboard
-![Dashboard](https://example.com/dashboard.png)
+![Dashboard](/screenshots/dashboard.png)
 
 ### Journal Entry
-![Journal Entry](https://example.com/journal.png)
+![Journal Entry](/screenshots/landing.png)
 
 ### Admin Panel
-![Admin Panel](https://example.com/admin.png)
+![Admin Panel](/screenshots/admin.png)
 
 ## License
 
